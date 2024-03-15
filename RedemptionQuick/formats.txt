@@ -1,0 +1,71 @@
+<formatdefinitions>
+
+<format><label>Rotation</label>
+	<set>Cloud of Witnesses</set>
+	<set>Cloud of Witnesses (Alternate Border)</set>
+	<set>Early Church</set>
+	<set>Fall of Man</set>
+	<set>Fundraiser</set>
+	<set>Gospel of Christ</set>
+	<set>I Starter</set>
+	<set>I/J+</set>
+	<set>Israel's Rebellion</set>
+	<set>J Starter</set>
+	<set>K Starter</set>
+	<set>K Starter (1st Print)</set>
+	<set>L Starter</set>
+	<set>L Starter (1st Print)</set>
+	<set>Lineage of Christ</set>
+	<set>Persecuted Church</set>
+	<set>Promo - P2</set>
+	<set>Promo - P3</set>
+	<set>Prophecies of Christ</set>
+	<set>Revelation of John</set>
+	<set>Revelation of John (Alternate Border)</set>
+	<set>Rock of Ages 3</set>
+	<set>Roots</set>	
+</format>
+
+<format><label>Christ Block</label>
+	<set>Fall of Man</set>
+	<set>Prophecies of Christ</set>
+	<set>Lineage of Christ</set>
+	<set>Gospel of Christ</set>
+</format>
+
+<format><label>Scroots</label>
+	<set>Promo - P1</set>
+	<set>Main</set>
+	<set>Main Unlimited</set>
+	<set>A Starter</set>
+	<set>B Starter</set>
+	<set>Prophets</set>
+	<set>Women</set>
+	<set>Warriors</set>
+	<set>C Starter</set>
+	<set>D Starter</set>
+	<set>Apostles</set>
+	<set>Patriarchs</set>
+	<set>Kings</set>
+	<set>E Starter</set>
+	<set>F Starter</set>
+	<set>Angel Wars</set>
+	<set>G Starter</set>
+	<set>H Starter</set>
+	<set>Priests</set>
+	<set>Faith of Our Fathers</set>
+	<set>Rock of Ages</set>
+	<set>Thesaurus ex Preteritus</set>
+	<set>Disciples</set>
+	<set>Roots</set>	
+</format>
+
+<format><label>LoC Only</label>
+	<set>Lineage of Christ</set>
+</format>
+
+<format><label>GoC Only</label>
+	<set>Gospel of Christ</set>
+</format>
+
+</formatdefinitions>

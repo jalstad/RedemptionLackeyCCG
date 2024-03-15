@@ -4,35 +4,54 @@ carddata.txt
 1
 Standard
 
-31
-10th Anniversary
-1st Edition
-1st Edition Unlimited
-2nd Edition
-2nd Edition Revised
-3rd Edition
-Angel Wars
-Apostles
-Cloud of Witnesses
-Disciples
-Early Church
-Faith of Our Fathers
-Fall of Man
+50
+10A
+1E
+1EU
+2E
+2ER
+3E
+AW
+Ap
+CoW
+CoW [Ban]
+CoW (AB)
+Di
+TEC
+FoOF
+FoM
+Fund
+GoC
 I
+I/J+
+IR
 J
-K Starter
-Kings
-L Starter
+K
+K1P
+Ki
+L
+L1P
+LoC
 Main
-Main Unlimited
-Patriarchs
-Persecuted Church
-Priests
-Promo
-Prophecies of Christ
-Prophets
-Revelation of John
-Rock of Ages
-Thesaurus ex Preteritus
-Warriors
-Women
+Main [Ban]
+Main UL
+Main UL [Ban]
+Pat
+TPC
+TPC [Ban]
+Pri
+Pmo-P1
+Pmo-P2
+Pmo-P3
+PoC
+PoC [Ban]
+Prp
+RoJ
+RoJ (AB)
+RoA
+RoA [Ban]
+RoA 3
+RR
+TxP
+War
+Wom
