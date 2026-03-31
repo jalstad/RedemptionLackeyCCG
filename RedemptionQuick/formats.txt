@@ -26,6 +26,7 @@
 	<set>II</set>
 	<set>RR</set>
 	<set>T2C</set>
+	<set>T2C (AB)</set>
 </format>
 
 <format><label>Christ Block</label>

@@ -1,5 +1,5 @@
 <plugin>
-<pluginversion>1.3</pluginversion>
+<pluginversion>2.3.0</pluginversion>
 
 <pluginname>Redemption</pluginname>
 
