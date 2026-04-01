@@ -4,7 +4,7 @@ carddata.txt
 1
 Standard
 
-34
+37
 10th Anniversary
 1st Edition
 1st Edition Unlimited
@@ -14,6 +14,7 @@ Standard
 Angel Wars
 Apostles
 Cloud of Witnesses
+Cloud of Witnesses (Alternate Border)
 Disciples
 Early Church
 Faith of Our Fathers
@@ -34,8 +35,10 @@ Promo
 Prophecies of Christ
 Prophets
 Revelation of John
+Revelation of John (Alternate Border)
 Rock of Ages
 Thesaurus ex Preteritus
 Times to Come
+Times to Come (Alternate Border)
 Warriors
 Women

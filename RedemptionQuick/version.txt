@@ -1,8 +1,8 @@
 <version>
 
-<lastupdateYYMMDD>260224</lastupdateYYMMDD>
+<lastupdateYYMMDD>260401</lastupdateYYMMDD>
 <versionurl>https://jalstad.github.io/RedemptionLackeyCCG/RedemptionQuick/version.txt</versionurl>
 <updateurl>https://jalstad.github.io/RedemptionLackeyCCG/RedemptionQuick/updatelist.txt</updateurl>
-<message>Redemption Plugin Version 2.2.1: Added Early 2026 Promos</message>
+<message>Redemption Plugin Version 2.3.0: Added Times to Come Alternate Border set</message>
 
 </version>
