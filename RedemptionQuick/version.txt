@@ -3,6 +3,6 @@
 <lastupdateYYMMDD>260401</lastupdateYYMMDD>
 <versionurl>https://jalstad.github.io/RedemptionLackeyCCG/RedemptionQuick/version.txt</versionurl>
 <updateurl>https://jalstad.github.io/RedemptionLackeyCCG/RedemptionQuick/updatelist.txt</updateurl>
-<message>Redemption Plugin Version 2.3.0: Added Times to Come Alternate Border set</message>
+<message>Redemption Plugin Version 2.3.1: Fixed Babylon T2C AB image</message>
 
 </version>
