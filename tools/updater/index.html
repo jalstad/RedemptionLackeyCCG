@@ -97,12 +97,13 @@ function setVersion(ver) {
 async function preview() {
   const data = await api("/api/preview", payload());
   lastPreview = data;
+  document.getElementById("ackwarn").checked = false;
   const el = document.getElementById("result");
   document.getElementById("review").classList.remove("hidden");
   if (!data.ok) {
     el.innerHTML = '<p class="err"><b>Cannot apply — fix these first:</b></p><pre class="err">'
       + escapeHtml(data.error) + '</pre>';
-    enableApply(false);
+    document.getElementById("applybtn").disabled = true;
     return;
   }
   let html = '<p class="counts"><span class="ok">' + data.counts.add + ' ADD</span>'
@@ -116,15 +117,24 @@ async function preview() {
     + '</b>, case mismatches: <b>' + img.case_mismatch.length
     + '</b>, orphaned: ' + img.orphaned.length + '</p>';
   if (img.missing_new.length)
-    html += '<pre class="warn">Missing for new cards:\n' + img.missing_new.join("\n") + '</pre>';
+    html += '<pre class="warn">Missing for new cards:\n' + img.missing_new.map(escapeHtml).join("\n") + '</pre>';
   if (img.case_mismatch.length)
-    html += '<pre class="warn">Case mismatches:\n' + img.case_mismatch.join("\n") + '</pre>';
+    html += '<pre class="warn">Case mismatches:\n' + img.case_mismatch.map(escapeHtml).join("\n") + '</pre>';
   el.innerHTML = html;
-  enableApply(true);
+  const hasWarnings = data.warnings.length > 0 || data.images.missing_new.length > 0 || data.images.case_mismatch.length > 0;
+  gateApply(hasWarnings);
 }
-function enableApply(ok) {
-  document.getElementById("applybtn").disabled = !ok;
-  document.getElementById("ackwarn").onchange = null;
+function gateApply(hasWarnings) {
+  // No warnings: enable immediately. Warnings: require the ack checkbox.
+  const btn = document.getElementById("applybtn");
+  const ack = document.getElementById("ackwarn");
+  if (!hasWarnings) {
+    btn.disabled = false;
+    ack.onchange = null;
+    return;
+  }
+  btn.disabled = !ack.checked;
+  ack.onchange = () => { btn.disabled = !ack.checked; };
 }
 async function apply() {
   const data = await api("/api/apply", payload());
