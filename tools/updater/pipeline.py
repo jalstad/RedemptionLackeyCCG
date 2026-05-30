@@ -37,6 +37,11 @@ def _compute(repo, pasted_text, version, yymmdd, message):
             f"New version {version} must be greater than current {current}.")
 
     header, data_lines = carddata.read_carddata(repo.carddata)
+    expected_header = "\t".join(carddata.COLUMNS)
+    if header != expected_header:
+        raise ValidationError(
+            "carddata.txt header does not match the expected 16 columns — "
+            "the file may be corrupt. Aborting to avoid writing bad data.")
     known = carddata.collect_known_values(data_lines)
     existing = carddata.existing_keys(data_lines)
     report = carddata.parse_and_validate(pasted_text, existing, known)

@@ -82,6 +82,21 @@ class TestParseValidate(unittest.TestCase):
                               OfficialSet="Patriarchs", Type="Hero", Alignment="Good")])
         self.assertTrue(any("whitespace" in w.lower() for w in rep.rows[0].warnings))
 
+    def test_nonnumeric_strength_is_warning(self):
+        rep = self.parse([row(Name="Eve", Set="Pat", ImageFile="Eve",
+                              OfficialSet="Patriarchs", Type="Hero",
+                              Strength="3x", Alignment="Good")])
+        self.assertEqual(rep.rows[0].action, "ADD")
+        self.assertEqual(rep.rows[0].errors, [])
+        self.assertTrue(any("Strength" in w for w in rep.rows[0].warnings))
+
+    def test_non_ascii_is_warning(self):
+        rep = self.parse([row(Name="Eve’s Card", Set="Pat", ImageFile="Eve",
+                              OfficialSet="Patriarchs", Type="Hero", Alignment="Good")])
+        self.assertTrue(any("non-ASCII" in w for w in rep.rows[0].warnings))
+        # value preserved verbatim in fields
+        self.assertIn("Eve’s Card", rep.rows[0].fields)
+
 
 class TestKnownValues(unittest.TestCase):
     def test_collects_distinct_column_values(self):

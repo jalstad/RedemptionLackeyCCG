@@ -80,3 +80,14 @@ class TestPipeline(unittest.TestCase):
         pipeline.apply(self.repo, "", version="2.3.2",
                        yymmdd="260530", message="Redemption Plugin Version 2.3.2: x")
         self.assertEqual(self.repo.carddata.read_bytes(), before)
+
+    def test_corrupt_header_aborts(self):
+        # Corrupt the sandbox carddata header; apply/preview must refuse.
+        cd = self.repo.carddata
+        text = cd.read_text(encoding="utf-8")
+        lines = text.split("\n")
+        lines[0] = "BOGUS\tHEADER"
+        cd.write_text("\n".join(lines), encoding="utf-8")
+        with self.assertRaises(pipeline.ValidationError):
+            pipeline.apply(self.repo, "", version="2.3.2",
+                           yymmdd="260530", message="x")

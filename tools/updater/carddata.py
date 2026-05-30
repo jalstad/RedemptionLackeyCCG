@@ -101,6 +101,8 @@ def parse_and_validate(text, existing_keys, known_values):
             report.rows.append(r)
             continue
         r.fields = parts
+        if any(ord(ch) > 127 for ch in raw):
+            r.warnings.append("Row contains non-ASCII characters (smart quotes?) — preserved as-is; confirm they're intended.")
         values = {c: parts[idx] for idx, c in enumerate(COLUMNS)}
         for c in REQUIRED:
             if not values[c].strip():
@@ -116,6 +118,10 @@ def parse_and_validate(text, existing_keys, known_values):
             v = values[c]
             if v and v not in known_values.get(c, set()):
                 r.warnings.append(f"Unrecognized {c} value: '{v}' (new — or a typo?).")
+        for c in ("Strength", "Toughness"):
+            v = values[c].strip()
+            if v and not (v.lstrip("-").isdigit()):
+                r.warnings.append(f"{c} value '{v}' is not a plain integer (check it?).")
         if not r.errors:
             r.action = "UPDATE" if key in existing_keys else "ADD"
         report.rows.append(r)

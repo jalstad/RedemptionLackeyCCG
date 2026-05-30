@@ -64,6 +64,11 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main(port=8765):
+    from . import paths
+    if not paths.CARDDATA.exists():
+        print("ERROR: RedemptionQuick/sets/carddata.txt not found. "
+              "Run this tool from inside the plugin repository.")
+        return
     httpd = HTTPServer(("127.0.0.1", port), Handler)
     url = f"http://127.0.0.1:{port}"
     print(f"Redemption Update Tool running at {url}  (Ctrl+C to stop)")
