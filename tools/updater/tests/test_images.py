@@ -1,3 +1,5 @@
+import os
+import tempfile
 import unittest
 
 from tools.updater import images
@@ -34,3 +36,11 @@ class TestValidate(unittest.TestCase):
         ]
         refs = images.referenced_filenames(rows)
         self.assertEqual(refs, {"Eve.jpg", "139-Abeyance.jpg"})
+
+
+class TestListAvailable(unittest.TestCase):
+    def test_returns_only_jpg_files_case_insensitive_suffix(self):
+        d = tempfile.mkdtemp()
+        for name in ("a.jpg", "B.JPG", "c.png", "notes.txt"):
+            open(os.path.join(d, name), "w").close()
+        self.assertEqual(images.list_available(d), {"a.jpg", "B.JPG"})
