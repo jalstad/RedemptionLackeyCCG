@@ -2,7 +2,7 @@
 The bytes computed in preview are exactly the bytes apply writes."""
 from pathlib import Path
 
-from . import carddata, updatelist, version_bump, images, checksum, safe_write
+from . import carddata, updatelist, version_bump, images, checksum, safe_write, cropper
 
 
 class ValidationError(Exception):
@@ -126,3 +126,23 @@ def apply(repo=None, pasted_text="", *, version, yymmdd, message):
                     f"Self-verify failed for {rel}: manifest {parts[2]} "
                     f"!= disk {on_disk}")
     return {"ok": True, "images": c["images"]}
+
+
+def crop_and_save(repo=None, *, filename, preset, data):
+    """Crop raw image `data` per `preset` and save it into the plugin's image
+    directory under its normalized output name. Source files are never touched.
+    Returns the output filename. Raises cropper.PillowMissing / cropper.CropError."""
+    repo = repo or _live_repo()
+    out_name = cropper.output_name(filename)
+    cropped = cropper.crop_image_bytes(data, preset)
+    repo.images_dir.mkdir(parents=True, exist_ok=True)
+    safe_write.atomic_write(str(repo.images_dir / out_name), cropped)
+    return out_name
+
+
+def check_image_names(repo=None, *, names, pasted_text=""):
+    """Given cropped output filenames, return those that match no known card
+    image (existing carddata plus any ImageFile in pasted new/edited rows)."""
+    repo = repo or _live_repo()
+    valid = cropper.card_image_names(repo.carddata, pasted_text)
+    return {"unmatched": cropper.unmatched_names(names, valid)}

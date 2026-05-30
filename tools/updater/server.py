@@ -4,8 +4,9 @@ import json
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from urllib.parse import urlparse, parse_qs
 
-from . import pipeline, version_bump
+from . import pipeline, version_bump, cropper
 
 _INDEX = Path(__file__).resolve().parent / "index.html"
 
@@ -22,11 +23,13 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
-    def _read_json(self):
+    def _read_body(self):
         length = int(self.headers.get("Content-Length", 0))
-        if not length:
-            return {}
-        return json.loads(self.rfile.read(length).decode("utf-8"))
+        return self.rfile.read(length) if length else b""
+
+    def _read_json(self):
+        body = self._read_body()
+        return json.loads(body.decode("utf-8")) if body else {}
 
     def do_GET(self):
         if self.path in ("/", "/index.html"):
@@ -35,9 +38,28 @@ class Handler(BaseHTTPRequestHandler):
             self._send(404, {"error": "not found"})
 
     def do_POST(self):
+        route = urlparse(self.path)
         try:
+            # /api/crop carries raw image bytes + query params, not JSON.
+            if route.path == "/api/crop":
+                q = parse_qs(route.query)
+                data = self._read_body()
+                try:
+                    out = pipeline.crop_and_save(
+                        filename=q.get("filename", [""])[0],
+                        preset=q.get("preset", [cropper.DEFAULT_PRESET])[0],
+                        data=data)
+                    self._send(200, {"ok": True, "output_name": out})
+                except (cropper.PillowMissing, cropper.CropError) as e:
+                    self._send(200, {"ok": False, "error": str(e)})
+                return
+
             payload = self._read_json()
-            if self.path == "/api/current":
+            if self.path == "/api/check_image_names":
+                self._send(200, pipeline.check_image_names(
+                    names=payload.get("names", []),
+                    pasted_text=payload.get("pasted_text", "")))
+            elif self.path == "/api/current":
                 from . import paths
                 info = paths.PLUGININFO.read_text(encoding="utf-8")
                 cur = version_bump.read_current_version(info)

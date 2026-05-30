@@ -1,0 +1,4 @@
+# Optional dependency — only needed for the image-cropping step (Step 0).
+# The card-data / checksum / version release flow runs without it.
+# Install with:  python3 -m pip install -r tools/updater/requirements.txt
+Pillow>=10

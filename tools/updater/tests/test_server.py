@@ -48,3 +48,10 @@ class TestServer(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertFalse(data["ok"])
         self.assertIn("error", data)
+
+    def test_check_image_names_endpoint(self):
+        # Read-only: flags a name matching no card. Does not write any files.
+        status, data = self._post("/api/check_image_names", {
+            "names": ["definitely-not-a-card.jpg"], "pasted_text": ""})
+        self.assertEqual(status, 200)
+        self.assertEqual(data["unmatched"], ["definitely-not-a-card.jpg"])

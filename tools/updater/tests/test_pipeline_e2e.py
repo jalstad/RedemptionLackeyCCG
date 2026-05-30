@@ -91,3 +91,50 @@ class TestPipeline(unittest.TestCase):
         with self.assertRaises(pipeline.ValidationError):
             pipeline.apply(self.repo, "", version="2.3.2",
                            yymmdd="260530", message="x")
+
+    def test_check_image_names_flags_unmatched(self):
+        # A name that matches an existing card vs one that matches nothing.
+        _, data = carddata.read_carddata(self.repo.carddata)
+        from tools.updater import images
+        existing = images.resolve(data[0].split("\t")[2])
+        result = pipeline.check_image_names(
+            self.repo, names=[existing, "totally-bogus.jpg"], pasted_text="")
+        self.assertEqual(result["unmatched"], ["totally-bogus.jpg"])
+
+    def test_check_image_names_honours_pasted_rows(self):
+        # An image for a brand-new pasted card should NOT be flagged.
+        result = pipeline.check_image_names(
+            self.repo, names=["zzz-test.jpg"], pasted_text=self._new_card_row())
+        self.assertEqual(result["unmatched"], [])
+
+
+@unittest.skipUnless(
+    __import__("importlib").util.find_spec("PIL") is not None,
+    "Pillow not installed")
+class TestCropAndSave(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.repo = RepoFixture(self.tmp).repo
+
+    def _png(self, w, h):
+        import io
+        from PIL import Image
+        buf = io.BytesIO()
+        Image.new("RGB", (w, h), (1, 2, 3)).save(buf, "PNG")
+        return buf.getvalue()
+
+    def test_crop_and_save_writes_normalized_jpg(self):
+        out = pipeline.crop_and_save(
+            self.repo, filename="Abram, Abraham (Pa).png",
+            preset="printer2", data=self._png(816, 1110))
+        self.assertEqual(out, "Abram Abraham (Pa).jpg")
+        saved = self.repo.images_dir / out
+        self.assertTrue(saved.is_file())
+        from PIL import Image
+        with Image.open(saved) as im:
+            self.assertEqual(im.size, (345, 495))
+
+    def test_crop_and_save_bad_image_raises(self):
+        with self.assertRaises(pipeline.cropper.CropError):
+            pipeline.crop_and_save(self.repo, filename="x.png",
+                                   preset="printer2", data=b"nope")
