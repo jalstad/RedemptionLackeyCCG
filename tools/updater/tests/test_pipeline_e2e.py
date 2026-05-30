@@ -108,6 +108,59 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(result["unmatched"], [])
 
 
+class TestRealSetReplay(unittest.TestCase):
+    """End-to-end realism check: take the most recently added set off the LIVE
+    carddata, then re-add those exact rows through the tool and prove it
+    reproduces the real carddata.txt byte-for-byte with the real checksum. This
+    replays an actual historical release and is the strongest correctness signal
+    we have — if the merge, encoding, ordering, or checksum ever drift, it fails.
+    """
+
+    def _trailing_16col_block(self, data):
+        """The longest suffix of consecutive 16-column rows (re-addable rows that
+        sit at the end of the file). Skips over the known 30-column anomaly rows
+        if they happen to be at the tail."""
+        block = []
+        for line in reversed(data):
+            if line and len(line.split("\t")) == carddata.N_COLUMNS:
+                block.append(line)
+            else:
+                break
+        block.reverse()
+        return block
+
+    def test_readding_trailing_set_reproduces_live_carddata(self):
+        from tools.updater import images
+        header, data = carddata.read_carddata(paths.CARDDATA)
+        block = self._trailing_16col_block(data)
+        self.assertGreater(len(block), 0, "no re-addable trailing rows found")
+        before = data[:len(data) - len(block)]
+
+        tmp = tempfile.mkdtemp()
+        repo = RepoFixture(tmp).repo
+        # Roll carddata back to the pre-set state (no trailing newline, as live).
+        repo.carddata.write_text("\n".join([header] + before), encoding="utf-8")
+
+        # Re-add the exact set rows through the tool.
+        pipeline.apply(repo, "\n".join(block), version="2.3.2",
+                       yymmdd="260530", message="Redemption Plugin Version 2.3.2: replay")
+
+        # carddata.txt must be byte-identical to the live file...
+        self.assertEqual(repo.carddata.read_bytes(), paths.CARDDATA.read_bytes())
+        # ...and the recomputed checksum must equal the live file's checksum...
+        live_cs = checksum.checksum(paths.CARDDATA)
+        self.assertEqual(checksum.checksum(repo.carddata), live_cs)
+        # ...and the manifest must record that same checksum.
+        ul = repo.updatelist.read_text(encoding="utf-8")
+        cs_row = [l for l in ul.split("\n") if "sets/carddata.txt" in l][0]
+        self.assertEqual(int(cs_row.split("\t")[2]), live_cs)
+
+        # The set's images are recognized (none flagged as unmatched).
+        names = [images.resolve(l.split("\t")[2]) for l in block]
+        chk = pipeline.check_image_names(repo, names=names, pasted_text="\n".join(block))
+        self.assertEqual(chk["unmatched"], [])
+
+
 @unittest.skipUnless(
     __import__("importlib").util.find_spec("PIL") is not None,
     "Pillow not installed")
