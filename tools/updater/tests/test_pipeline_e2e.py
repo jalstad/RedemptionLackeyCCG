@@ -12,11 +12,17 @@ class RepoFixture:
         self.root = Path(root)
         red = self.root / "RedemptionQuick"
         (red / "sets" / "setimages" / "general").mkdir(parents=True)
-        shutil.copy(paths.CARDDATA, red / "sets" / "carddata.txt")
+        # Copy every file the manifest references, preserving relative paths,
+        # so updatelist.rebuild and the post-write self-verify can checksum them.
+        from tools.updater import updatelist
+        manifest_text = paths.UPDATELIST.read_text(encoding="utf-8")
+        for rel in updatelist.manifest_rels(manifest_text):
+            src = paths.REDEMPTION / rel
+            dst = red / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(src, dst)
+        # updatelist.txt is not in the manifest itself but must exist in the sandbox.
         shutil.copy(paths.UPDATELIST, red / "updatelist.txt")
-        shutil.copy(paths.VERSION, red / "version.txt")
-        shutil.copy(paths.PLUGININFO, red / "plugininfo.txt")
-        shutil.copy(paths.SETLIST, red / "setlist.txt")
         self.repo = pipeline.Repo(red)
 
 

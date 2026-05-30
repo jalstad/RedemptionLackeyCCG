@@ -59,12 +59,7 @@ def _compute(repo, pasted_text, version, yymmdd, message):
     def checksum_for_rel(rel):
         if rel in in_memory:
             return checksum.checksum_bytes(in_memory[rel])
-        candidate = repo.redemption / rel
-        if candidate.exists():
-            return checksum.checksum(candidate)
-        # Fall back to the live repo for static files absent from a sandbox.
-        from . import paths as _paths
-        return checksum.checksum(_paths.REDEMPTION / rel)
+        return checksum.checksum(repo.redemption / rel)
 
     new_updatelist = updatelist.rebuild(
         repo.updatelist.read_text(encoding="utf-8"), checksum_for_rel).encode("utf-8")
@@ -120,10 +115,7 @@ def apply(repo=None, pasted_text="", *, version, yymmdd, message):
         parts = line.split("\t")
         if len(parts) == 3 and parts[0].startswith("plugins/Redemption/"):
             rel = parts[0][len("plugins/Redemption/"):]
-            candidate = repo.redemption / rel
-            if not candidate.exists():
-                continue  # static file absent from sandbox — skip verify
-            on_disk = checksum.checksum(candidate)
+            on_disk = checksum.checksum(repo.redemption / rel)
             if int(parts[2]) != on_disk:
                 raise RuntimeError(
                     f"Self-verify failed for {rel}: manifest {parts[2]} "
