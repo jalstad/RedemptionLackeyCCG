@@ -28,6 +28,10 @@ class TestOutputName(unittest.TestCase):
     def test_strips_directory(self):
         self.assertEqual(cropper.output_name("/some/dir/Eve.PNG"), "Eve.jpg")
 
+    def test_empty_name_raises(self):
+        with self.assertRaises(cropper.CropError):
+            cropper.output_name("")
+
 
 class TestPresets(unittest.TestCase):
     def test_presets_shape(self):
@@ -49,6 +53,12 @@ class TestCrop(unittest.TestCase):
     def test_printer2_outputs_345x495_jpeg(self):
         data = _png_bytes(816, 1110)  # big enough for the (46,43,769,1082) box
         out = cropper.crop_image_bytes(data, "printer2")
+        im = Image.open(io.BytesIO(out))
+        self.assertEqual(im.size, (345, 495))
+        self.assertEqual(im.format, "JPEG")
+
+    def test_printer1_outputs_345x495_jpeg(self):
+        out = cropper.crop_image_bytes(_png_bytes(816, 1110), "printer1")
         im = Image.open(io.BytesIO(out))
         self.assertEqual(im.size, (345, 495))
         self.assertEqual(im.format, "JPEG")

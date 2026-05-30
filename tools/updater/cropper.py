@@ -47,9 +47,16 @@ def _require_pillow():
 
 def output_name(source_filename):
     """The on-disk filename a cropped image is saved under: the source name with
-    its extension dropped and commas removed (matching the maintainer's script),
-    plus a .jpg extension."""
+    its extension dropped and commas removed, plus a .jpg extension.
+
+    Commas are stripped to match the maintainer's original crop script and the
+    plugin's image-naming convention (card image filenames never contain commas,
+    even though card *names* like "Abram, Abraham" do). os.path.basename also
+    neutralizes any directory components in the supplied name.
+    """
     base = os.path.splitext(os.path.basename(source_filename))[0].replace(",", "")
+    if not base:
+        raise CropError(f"Cannot derive an output filename from {source_filename!r}")
     return base + ".jpg"
 
 
@@ -75,6 +82,8 @@ def crop_image_bytes(data, preset=DEFAULT_PRESET):
             f"{cfg['label']} crop box (needs at least {right}x{lower}). "
             f"Is this the right preset / a full-resolution scan?")
     out = io.BytesIO()
+    # quality=100: preserve full scan fidelity — these images are distributed
+    # with the plugin and re-compressing them lossily would degrade card art.
     im.crop(cfg["box"]).resize(cfg["size"]).save(out, "JPEG", quality=100)
     return out.getvalue()
 

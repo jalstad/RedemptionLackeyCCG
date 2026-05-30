@@ -190,8 +190,9 @@ async function cropImages() {
       {names: saved, pasted_text: document.getElementById("paste").value});
     unmatched = chk.unmatched || [];
   }
-  let html = '<p class="ok">Saved ' + saved.length
-    + ' image(s) to setimages/general/.</p>';
+  let html = saved.length
+    ? '<p class="ok">Saved ' + saved.length + ' image(s) to setimages/general/.</p>'
+    : '<p class="warn">No images were saved.</p>';
   if (failed.length)
     html += '<p class="err"><b>' + failed.length + ' could not be cropped:</b></p>'
       + '<pre class="err">' + failed.map(escapeHtml).join("\n") + '</pre>';
