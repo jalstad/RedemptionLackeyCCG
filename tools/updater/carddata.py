@@ -120,3 +120,31 @@ def parse_and_validate(text, existing_keys, known_values):
             r.action = "UPDATE" if key in existing_keys else "ADD"
         report.rows.append(r)
     return report
+
+
+def read_carddata(path):
+    """Return (header_line, data_lines). Raw strings, split on \\n. The file has
+    no trailing newline, so the last element is the last real row."""
+    text = path.read_text(encoding="utf-8")
+    lines = text.split("\n")
+    return lines[0], lines[1:]
+
+
+def merge(header, data_lines, report):
+    """Return the full new carddata.txt content. UPDATE rows replace the matching
+    existing line in place; ADD rows are appended at the end in paste order.
+    Untouched lines pass through as their original strings (byte-exact)."""
+    data_lines = list(data_lines)
+    index = {}
+    for i, line in enumerate(data_lines):
+        if not line:
+            continue
+        parts = line.split("\t")
+        index[(parts[0].strip(), parts[1].strip())] = i
+    appended = []
+    for r in report.rows:
+        if r.action == "UPDATE":
+            data_lines[index[r.key]] = "\t".join(r.fields)
+        elif r.action == "ADD":
+            appended.append("\t".join(r.fields))
+    return "\n".join([header] + data_lines + appended)

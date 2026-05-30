@@ -96,3 +96,56 @@ class TestKnownValues(unittest.TestCase):
     def test_existing_keys(self):
         data_lines = [row(Name="Adam", Set="Pat"), ""]  # blank line ignored
         self.assertEqual(carddata.existing_keys(data_lines), {("Adam", "Pat")})
+
+
+from tools.updater import paths
+
+
+class TestMerge(unittest.TestCase):
+    def parse(self, lines, existing, known=None):
+        return carddata.parse_and_validate(
+            "\n".join(lines), existing_keys=existing, known_values=known or {})
+
+    def test_read_carddata_splits_header_and_data(self):
+        header, data = carddata.read_carddata(paths.CARDDATA)
+        self.assertEqual(header, HEADER)
+        self.assertGreater(len(data), 5000)
+        self.assertNotEqual(data[-1], "")  # no trailing blank => no trailing newline
+
+    def test_empty_paste_round_trips_byte_identical(self):
+        header, data = carddata.read_carddata(paths.CARDDATA)
+        rep = self.parse([], existing=set())
+        merged = carddata.merge(header, data, rep)
+        self.assertEqual(merged, paths.CARDDATA.read_text(encoding="utf-8"))
+
+    def test_add_appends_at_end(self):
+        header = HEADER
+        data = [row(Name="Adam", Set="Pat", ImageFile="Adam",
+                    OfficialSet="Patriarchs", Type="Hero", Alignment="Good")]
+        rep = self.parse([row(Name="Eve", Set="Pat", ImageFile="Eve",
+                              OfficialSet="Patriarchs", Type="Hero", Alignment="Good")],
+                         existing={("Adam", "Pat")})
+        merged = carddata.merge(header, data, rep)
+        lines = merged.split("\n")
+        self.assertEqual(lines[0], HEADER)
+        self.assertTrue(lines[1].startswith("Adam\t"))
+        self.assertTrue(lines[2].startswith("Eve\t"))
+        self.assertFalse(merged.endswith("\n"))
+
+    def test_update_replaces_in_place(self):
+        header = HEADER
+        data = [
+            row(Name="Adam", Set="Pat", ImageFile="Adam", OfficialSet="Patriarchs",
+                Type="Hero", Rarity="Common", Alignment="Good"),
+            row(Name="Cain", Set="Pat", ImageFile="Cain", OfficialSet="Patriarchs",
+                Type="Hero", Alignment="Evil"),
+        ]
+        rep = self.parse([row(Name="Adam", Set="Pat", ImageFile="Adam",
+                              OfficialSet="Patriarchs", Type="Hero",
+                              Rarity="Rare", Alignment="Good")],
+                         existing={("Adam", "Pat"), ("Cain", "Pat")})
+        merged = carddata.merge(header, data, rep)
+        lines = merged.split("\n")
+        self.assertEqual(len(lines), 3)  # header + 2 rows, no append
+        self.assertIn("\tRare\t", lines[1])  # Adam updated in place
+        self.assertTrue(lines[2].startswith("Cain\t"))
