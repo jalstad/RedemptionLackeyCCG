@@ -28,27 +28,32 @@ them yourself, exactly as before. Nothing is published until you choose to.
 Your browser opens to **http://127.0.0.1:8765**. To stop the tool, close the
 black terminal window it opened (or press `Ctrl+C` in it).
 
+> **Windows users:** you do **not** need `make` or a terminal. Double-clicking
+> `Start Update Tool.bat` is all it takes to run the tool.
+
 ### If you prefer the terminal
 
 Open a terminal in this folder and run:
 
-```bash
-make run
-```
+- **macOS / Linux:** `make run`
+- **Windows:** `make.bat run` (no GNU make required — the bundled `make.bat`
+  shim does the work; `make run` also works in `cmd`)
 
 ### One-time setup (only if you want image cropping)
 
 The card/version part works out of the box with Python 3. The **image cropping**
 step also needs a free library called Pillow. Install it once:
 
-```bash
-make setup
-```
+- **Windows, no terminal:** double-click
+  `tools/updater/Install image cropping.bat`
+- **macOS / Linux:** `make setup`
+- **Windows terminal:** `make.bat setup`
 
-(That's the same as `python3 -m pip install -r tools/updater/requirements.txt`.)
+(All of these run `python3 -m pip install -r tools/updater/requirements.txt`.)
 
 If a launcher says **"Python is missing,"** install Python 3 from
-[python.org/downloads](https://www.python.org/downloads/) and try again.
+[python.org/downloads](https://www.python.org/downloads/) (tick *"Add Python to
+PATH"* on Windows) and try again.
 
 ---
 
@@ -80,10 +85,14 @@ The tool lives in [`tools/updater/`](tools/updater/) and is built on the Python
 image cropping and imported lazily so the rest works without it). No build step.
 
 ```bash
-make test     # run the full test suite
-make run      # launch the local server
-make clean    # remove __pycache__ dirs
+make test     # run the full test suite   (Windows: make.bat test)
+make run      # launch the local server    (Windows: make.bat run)
+make clean    # remove __pycache__ dirs     (Windows: make.bat clean)
 ```
+
+On Windows, `make.bat <target>` provides the same commands without needing GNU
+make installed. With no arguments, the underlying commands are just
+`python3 -m tools.updater.server` and `python3 -m unittest discover -s tools/updater/tests`.
 
 Design and implementation notes are under
 [`docs/superpowers/`](docs/superpowers/).

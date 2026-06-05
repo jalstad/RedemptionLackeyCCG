@@ -15,9 +15,11 @@ HOW TO RUN
   Either way it opens http://127.0.0.1:8765 in your browser.
   (If it says Python is missing, install Python 3 from python.org and retry.)
 
-  Image cropping (Step 0) also needs the Pillow library. Install it once with:
-      python3 -m pip install -r tools/updater/requirements.txt
-  Everything except cropping works without it.
+  Image cropping (Step 0) also needs the Pillow library. Install it once:
+      Windows:        double-click "Install image cropping.bat"
+      macOS / Linux:  run  make setup
+      (both run:  python3 -m pip install -r tools/updater/requirements.txt)
+  Everything except cropping works without it. No "make" is needed on Windows.
 
 STEPS
   0. (Optional) Crop images: choose a crop preset, pick the folder of raw card
