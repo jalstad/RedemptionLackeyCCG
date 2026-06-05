@@ -84,7 +84,8 @@ def crop_image_bytes(data, preset=DEFAULT_PRESET):
     out = io.BytesIO()
     # quality=100: preserve full scan fidelity — these images are distributed
     # with the plugin and re-compressing them lossily would degrade card art.
-    im.crop(cfg["box"]).resize(cfg["size"]).save(out, "JPEG", quality=100)
+    im.crop(cfg["box"]).resize(cfg["size"], Image.LANCZOS).save(
+        out, "JPEG", quality=100)
     return out.getvalue()
 
 

@@ -26,6 +26,11 @@
 </head>
 <body>
 <h1>Redemption Plugin Update Tool</h1>
+<div id="connerror" class="banner hidden" style="background:#fdecea;border-color:#b00020;">
+  <b>Can't reach the tool.</b> The background program may have stopped. Close this
+  tab, start the tool again (double-click the launcher or run it), then reopen
+  <a href="/">this page</a>.
+</div>
 <div class="banner">
   This tool only changes files on your computer. It will <b>not</b> touch git.
   When it finishes, review the changes and commit them yourself, just like always.
@@ -207,14 +212,18 @@ function escapeHtml(s) {
   return s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 }
 (async function init() {
-  const cur = await api("/api/current", {});
-  document.getElementById("current").textContent = cur.version;
-  setVersion(cur.suggested);
-  const now = new Date();
-  const yy = String(now.getFullYear()).slice(2);
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const dd = String(now.getDate()).padStart(2, "0");
-  document.getElementById("yymmdd").value = yy + mm + dd;
+  try {
+    const cur = await api("/api/current", {});
+    document.getElementById("current").textContent = cur.version;
+    setVersion(cur.suggested);
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(2);
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    document.getElementById("yymmdd").value = yy + mm + dd;
+  } catch (e) {
+    document.getElementById("connerror").classList.remove("hidden");
+  }
 })();
 </script>
 </body>

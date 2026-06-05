@@ -1,9 +1,12 @@
+import importlib.util
 import shutil
 import tempfile
 import unittest
 from pathlib import Path
 
 from tools.updater import pipeline, paths, checksum, carddata
+
+_HAS_PILLOW = importlib.util.find_spec("PIL") is not None
 
 
 class RepoFixture:
@@ -74,6 +77,32 @@ class TestPipeline(unittest.TestCase):
         with self.assertRaises(pipeline.ValidationError):
             pipeline.apply(self.repo, "", version="2.3.1",
                            yymmdd="260530", message="x")
+
+    def test_preview_rejects_malformed_version(self):
+        for bad in ("2.3", "abc", "2.3.x", ""):
+            result = pipeline.preview(self.repo, "", version=bad,
+                                      yymmdd="260530", message="x")
+            self.assertFalse(result["ok"], bad)
+            self.assertIn("Version", result["error"])
+
+    def test_preview_rejects_malformed_date(self):
+        for bad in ("June 4 2026", "26053", "2605300", "", "26-05-30"):
+            result = pipeline.preview(self.repo, "", version="2.3.2",
+                                      yymmdd=bad, message="x")
+            self.assertFalse(result["ok"], bad)
+            self.assertIn("Date", result["error"])
+
+    def test_apply_rejects_malformed_version_and_date(self):
+        with self.assertRaises(pipeline.ValidationError):
+            pipeline.apply(self.repo, "", version="2.3", yymmdd="260530", message="x")
+        with self.assertRaises(pipeline.ValidationError):
+            pipeline.apply(self.repo, "", version="2.3.2", yymmdd="bad", message="x")
+
+    def test_preview_warns_on_empty_message(self):
+        result = pipeline.preview(self.repo, "", version="2.3.2",
+                                  yymmdd="260530", message="   ")
+        self.assertTrue(result["ok"])
+        self.assertTrue(any("message is empty" in w for w in result["warnings"]))
 
     def test_empty_paste_version_only_keeps_carddata_identical(self):
         before = self.repo.carddata.read_bytes()
@@ -161,9 +190,7 @@ class TestRealSetReplay(unittest.TestCase):
         self.assertEqual(chk["unmatched"], [])
 
 
-@unittest.skipUnless(
-    __import__("importlib").util.find_spec("PIL") is not None,
-    "Pillow not installed")
+@unittest.skipUnless(_HAS_PILLOW, "Pillow not installed")
 class TestCropAndSave(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()

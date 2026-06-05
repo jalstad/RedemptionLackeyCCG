@@ -68,14 +68,16 @@ class Handler(BaseHTTPRequestHandler):
             elif self.path == "/api/preview":
                 self._send(200, pipeline.preview(
                     pasted_text=payload.get("pasted_text", ""),
-                    version=payload["version"], yymmdd=payload["yymmdd"],
-                    message=payload["message"]))
+                    version=payload.get("version", ""),
+                    yymmdd=payload.get("yymmdd", ""),
+                    message=payload.get("message", "")))
             elif self.path == "/api/apply":
                 try:
                     result = pipeline.apply(
                         pasted_text=payload.get("pasted_text", ""),
-                        version=payload["version"], yymmdd=payload["yymmdd"],
-                        message=payload["message"])
+                        version=payload.get("version", ""),
+                        yymmdd=payload.get("yymmdd", ""),
+                        message=payload.get("message", ""))
                     self._send(200, {"ok": True, "images": result["images"]})
                 except pipeline.ValidationError as e:
                     self._send(400, {"ok": False, "error": str(e)})
@@ -91,7 +93,13 @@ def main(port=8765):
         print("ERROR: RedemptionQuick/sets/carddata.txt not found. "
               "Run this tool from inside the plugin repository.")
         return
-    httpd = HTTPServer(("127.0.0.1", port), Handler)
+    try:
+        httpd = HTTPServer(("127.0.0.1", port), Handler)
+    except OSError as e:
+        print(f"ERROR: could not start on port {port} ({e}). "
+              "Another copy of this tool may already be running — close it and "
+              "try again.")
+        return
     url = f"http://127.0.0.1:{port}"
     print(f"Redemption Update Tool running at {url}  (Ctrl+C to stop)")
     try:

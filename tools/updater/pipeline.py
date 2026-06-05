@@ -1,8 +1,12 @@
 """Orchestrates preview (read-only) and apply (atomic write) across all modules.
 The bytes computed in preview are exactly the bytes apply writes."""
+import re
 from pathlib import Path
 
 from . import carddata, updatelist, version_bump, images, checksum, safe_write, cropper
+
+_VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
+_YYMMDD_RE = re.compile(r"^\d{6}$")
 
 
 class ValidationError(Exception):
@@ -30,6 +34,13 @@ def _live_repo():
 def _compute(repo, pasted_text, version, yymmdd, message):
     """Pure computation shared by preview and apply. Returns a dict of the new
     file contents (bytes) plus a report. Raises ValidationError on hard errors."""
+    if not _VERSION_RE.match(version or ""):
+        raise ValidationError(
+            f"Version must be three numbers like 2.3.2 (got {version!r}).")
+    if not _YYMMDD_RE.match(yymmdd or ""):
+        raise ValidationError(
+            f"Date must be 6 digits in YYMMDD form, e.g. 260604 (got {yymmdd!r}).")
+
     info_text = repo.plugininfo.read_text(encoding="utf-8")
     current = version_bump.read_current_version(info_text)
     if not version_bump.is_newer(version, current):
@@ -80,6 +91,11 @@ def _compute(repo, pasted_text, version, yymmdd, message):
     img = images.validate(referenced, available)
     img["missing_new"] = sorted(f for f in img["missing"] if f in new_refs)
 
+    extra_warnings = []
+    if not (message or "").strip():
+        extra_warnings.append(
+            "Release message is empty — consider adding a short description.")
+
     return {
         "report": report,
         "files": {
@@ -89,6 +105,7 @@ def _compute(repo, pasted_text, version, yymmdd, message):
             repo.updatelist: new_updatelist,
         },
         "images": img,
+        "extra_warnings": extra_warnings,
     }
 
 
@@ -103,7 +120,7 @@ def preview(repo=None, pasted_text="", *, version, yymmdd, message):
         "ok": True,
         "counts": {"add": len(r.adds), "update": len(r.updates)},
         "warnings": [f"line {row.line_no}: {w}"
-                     for row in r.rows for w in row.warnings],
+                     for row in r.rows for w in row.warnings] + c["extra_warnings"],
         "images": c["images"],
     }
 
@@ -115,11 +132,13 @@ def apply(repo=None, pasted_text="", *, version, yymmdd, message):
     for path, data in c["files"].items():
         safe_write.atomic_write(str(path), data)
     # post-write self-verify: every manifest checksum must match disk
+    from . import paths
+    prefix = paths.MANIFEST_PATH_PREFIX
     ul = repo.updatelist.read_text(encoding="utf-8")
     for line in ul.split("\n"):
         parts = line.split("\t")
-        if len(parts) == 3 and parts[0].startswith("plugins/Redemption/"):
-            rel = parts[0][len("plugins/Redemption/"):]
+        if len(parts) == 3 and parts[0].startswith(prefix):
+            rel = parts[0][len(prefix):]
             on_disk = checksum.checksum(repo.redemption / rel)
             if int(parts[2]) != on_disk:
                 raise RuntimeError(
