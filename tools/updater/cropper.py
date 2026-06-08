@@ -41,8 +41,11 @@ def _require_pillow():
         return Image
     except ImportError as e:  # pragma: no cover - depends on environment
         raise PillowMissing(
-            "Pillow is not installed. Install it with:  "
-            "python3 -m pip install Pillow") from e
+            "Pillow is not installed, so images can't be cropped. Install it by "
+            "running this in a terminal in the project folder:  "
+            "python -m pip install Pillow   (on Windows, try 'py -m pip install "
+            "Pillow' if 'python' isn't found). Then close this tool's window and "
+            "start it again.") from e
 
 
 def output_name(source_filename):

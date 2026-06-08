@@ -17,6 +17,11 @@
   button { font: inherit; padding: .5rem 1rem; border-radius: 6px; cursor: pointer; }
   button.primary { background: #2e7d32; color: #fff; border: none; }
   button:disabled { opacity: .5; cursor: not-allowed; }
+  .spinner { display: inline-block; width: .9em; height: .9em; margin-right: .5em;
+             vertical-align: -.1em; border: 2px solid currentColor;
+             border-right-color: transparent; border-radius: 50%;
+             animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   .err { color: #b00020; } .warn { color: #946200; } .ok { color: #2e7d32; }
   .counts span { margin-right: 1rem; font-weight: 600; }
   pre { background: #f5f5f5; padding: .6rem; border-radius: 6px; white-space: pre-wrap; }
@@ -50,7 +55,7 @@
      </select></p>
   <p><label>Image folder</label>
      <input type="file" id="cropfiles" multiple webkitdirectory></p>
-  <button type="button" onclick="cropImages()">Crop &amp; save images</button>
+  <button type="button" onclick="cropImages(this)">Crop &amp; save images</button>
   <div id="cropresult"></div>
 </fieldset>
 
@@ -74,14 +79,14 @@
      <button type="button" onclick="bump('major')">+major</button></p>
   <p><label>Date (YYMMDD)</label> <input type="text" id="yymmdd" size="8"></p>
   <p><label>Message</label> <input type="text" id="message" size="60"></p>
-  <button type="button" class="primary" onclick="preview()">Preview changes</button>
+  <button type="button" class="primary" onclick="preview(this)">Preview changes</button>
 </fieldset>
 
 <fieldset id="review" class="hidden">
   <legend>Step 3 — Review (nothing saved yet)</legend>
   <div id="result"></div>
   <p><label><input type="checkbox" id="ackwarn"> I have reviewed the warnings above.</label></p>
-  <button type="button" class="primary" id="applybtn" onclick="apply()">Looks good — Apply</button>
+  <button type="button" class="primary" id="applybtn" onclick="apply(this)">Looks good — Apply</button>
 </fieldset>
 
 <fieldset id="done" class="hidden">
@@ -92,6 +97,24 @@
 
 <script>
 let lastPreview = null;
+
+// Disable a button and show a spinner + label while `fn` runs, so a slow
+// operation can't be triggered twice by an impatient double-click. Restores
+// the button afterward, even if the work throws.
+async function runBusy(btn, busyLabel, fn) {
+  if (!btn || btn.dataset.busy) return;        // already running — ignore re-clicks
+  const original = btn.innerHTML;
+  btn.dataset.busy = "1";
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>' + escapeHtml(busyLabel);
+  try {
+    return await fn();
+  } finally {
+    delete btn.dataset.busy;
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
+}
 
 async function api(path, payload) {
   const r = await fetch(path, {method: "POST",
@@ -117,7 +140,8 @@ function setVersion(ver) {
   const m = document.getElementById("message");
   m.value = "Redemption Plugin Version " + ver + ": ";
 }
-async function preview() {
+async function preview(btn) {
+  await runBusy(btn, "Previewing…", async () => {
   const data = await api("/api/preview", payload());
   lastPreview = data;
   document.getElementById("ackwarn").checked = false;
@@ -146,6 +170,7 @@ async function preview() {
   el.innerHTML = html;
   const hasWarnings = data.warnings.length > 0 || data.images.missing_new.length > 0 || data.images.case_mismatch.length > 0;
   gateApply(hasWarnings);
+  });
 }
 function gateApply(hasWarnings) {
   // No warnings: enable immediately. Warnings: require the ack checkbox.
@@ -159,41 +184,52 @@ function gateApply(hasWarnings) {
   btn.disabled = !ack.checked;
   ack.onchange = () => { btn.disabled = !ack.checked; };
 }
-async function apply() {
-  const data = await api("/api/apply", payload());
-  if (data.ok) {
-    document.getElementById("review").classList.add("hidden");
-    document.getElementById("done").classList.remove("hidden");
-  } else {
-    alert("Could not apply: " + data.error);
-  }
+async function apply(btn) {
+  await runBusy(btn, "Applying…", async () => {
+    const data = await api("/api/apply", payload());
+    if (data.ok) {
+      document.getElementById("review").classList.add("hidden");
+      document.getElementById("done").classList.remove("hidden");
+    } else {
+      alert("Could not apply: " + data.error);
+    }
+  });
 }
-async function cropImages() {
+async function cropImages(btn) {
   const input = document.getElementById("cropfiles");
   const preset = document.getElementById("preset").value;
   const out = document.getElementById("cropresult");
   const files = [...input.files].filter(
     f => /\.(png|jpe?g|tif?f|bmp|gif|webp)$/i.test(f.name));
   if (!files.length) { out.innerHTML = '<p class="warn">No image files selected.</p>'; return; }
+  await runBusy(btn, "Cropping…", async () => {
   out.textContent = "Cropping " + files.length + " image(s)…";
   const saved = [], failed = [];
   for (let i = 0; i < files.length; i++) {
     const f = files[i];
-    const buf = await f.arrayBuffer();
-    const url = "/api/crop?filename=" + encodeURIComponent(f.name)
-      + "&preset=" + encodeURIComponent(preset);
-    const r = await fetch(url, {method: "POST",
-      headers: {"Content-Type": "application/octet-stream"}, body: buf});
-    const data = await r.json();
-    if (data.ok) saved.push(data.output_name);
-    else failed.push(f.name + " — " + data.error);
+    try {
+      const buf = await f.arrayBuffer();
+      const url = "/api/crop?filename=" + encodeURIComponent(f.name)
+        + "&preset=" + encodeURIComponent(preset);
+      const r = await fetch(url, {method: "POST",
+        headers: {"Content-Type": "application/octet-stream"}, body: buf});
+      const data = await r.json();
+      if (data.ok) saved.push(data.output_name);
+      else failed.push(f.name + " — " + data.error);
+    } catch (e) {
+      failed.push(f.name + " — could not reach the update tool ("
+        + (e && e.message ? e.message : e)
+        + "). Make sure its window is still open, then try again.");
+    }
     out.textContent = "Cropped " + (i + 1) + " / " + files.length + "…";
   }
   let unmatched = [];
   if (saved.length) {
-    const chk = await api("/api/check_image_names",
-      {names: saved, pasted_text: document.getElementById("paste").value});
-    unmatched = chk.unmatched || [];
+    try {
+      const chk = await api("/api/check_image_names",
+        {names: saved, pasted_text: document.getElementById("paste").value});
+      unmatched = chk.unmatched || [];
+    } catch (e) { /* name-matching is optional; don't fail the whole crop */ }
   }
   let html = saved.length
     ? '<p class="ok">Saved ' + saved.length + ' image(s) to setimages/general/.</p>'
@@ -207,6 +243,7 @@ async function cropImages() {
       + 'or a misnamed file):</b></p><pre class="warn">'
       + unmatched.map(escapeHtml).join("\n") + '</pre>';
   out.innerHTML = html;
+  });
 }
 function escapeHtml(s) {
   return s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));

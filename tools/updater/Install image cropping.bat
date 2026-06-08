@@ -23,7 +23,16 @@ if not defined PY (
 )
 
 echo Installing the image-cropping library (Pillow)...
-"%PY%" -m pip install -r tools\updater\requirements.txt
 echo.
-echo Done. You can close this window and use the Crop step in the tool.
+"%PY%" -m pip install -r tools\updater\requirements.txt
+if errorlevel 1 (
+  echo.
+  echo Install failed. Check your internet connection and try again.
+  echo.
+  pause
+  exit /b 1
+)
+echo.
+echo Done. If the update tool is already open, close its window and start it
+echo again before using the Crop step -- it only sees Pillow after a restart.
 pause
