@@ -1,0 +1,18 @@
+# Line-ending policy for the files the update tool reads and rewrites.
+#
+# The tool always writes LF-only bytes. Pinning these files to LF keeps the
+# working tree byte-identical to what the tool writes, so a Windows checkout
+# never produces a spurious whole-file line-ending diff — which would also
+# shift the plugin's published checksums during review.
+RedemptionQuick/sets/carddata.txt   text eol=lf
+RedemptionQuick/updatelist.txt      text eol=lf
+RedemptionQuick/version.txt         text eol=lf
+RedemptionQuick/plugininfo.txt      text eol=lf
+
+# Launcher scripts need their platform's native line endings: a bash script
+# checked out with CRLF fails to run; a .bat is safest with CRLF on Windows.
+*.command   text eol=lf
+*.bat       text eol=crlf
+
+# Cropped card images are written as raw JPEG bytes — never transform them.
+RedemptionQuick/sets/setimages/general/*.jpg   binary

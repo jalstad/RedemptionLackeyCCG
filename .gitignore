@@ -2,3 +2,16 @@ RedemptionQuick/sets/test.html
 RedemptionQuick/decks/LoC_Battle_of_Brothers.txt
 .DS_Store
 RedemptionQuick/updatelist_real_official_copy.txt
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.venv/
+venv/
+env/
