@@ -4,7 +4,7 @@ carddata.txt
 1
 Standard
 
-37
+39
 10th Anniversary
 1st Edition
 1st Edition Unlimited
@@ -37,6 +37,8 @@ Prophets
 Revelation of John
 Revelation of John (Alternate Border)
 Rock of Ages
+Roots
+Roots 2
 Thesaurus ex Preteritus
 Times to Come
 Times to Come (Alternate Border)
