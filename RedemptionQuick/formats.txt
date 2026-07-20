@@ -27,6 +27,7 @@
 	<set>RR</set>
 	<set>T2C</set>
 	<set>T2C (AB)</set>
+	<set>RR2</set>
 </format>
 
 <format><label>Christ Block</label>
@@ -58,7 +59,8 @@
 	<set>RoA</set>
 	<set>TxP</set>
 	<set>Di</set>
-	<set>RR</set>	
+	<set>RR</set>
+	<set>RR2</set>
 </format>
 
 <format><label>LoC Only</label>
